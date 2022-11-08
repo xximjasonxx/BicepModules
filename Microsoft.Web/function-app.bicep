@@ -43,7 +43,8 @@ var identityBlock = identityType == 'none' ? null : (identityType == 'system' ? 
 
 var appKind = isLinux ? 'functionapp,linux' : 'functionapp'
 var extensionVersionRuntime = '~${runtimeVersion}'
-var storageAccountConnectionString = (storageAccountName != '') ? listKeys(storageAccount.id, '2022-05-01').keys[0].value : ''
+var storageAccountKey = (storageAccountName != '') ? listKeys(storageAccount.id, '2022-05-01').keys[0].value : ''
+var storageAccountConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccountKey};EndpointSuffix=${environment().suffixes.storage}'
 
 // build common app settings
 var insightsAppSettings = applicationInsightsInstrumentationKey == '' ? [] : [
