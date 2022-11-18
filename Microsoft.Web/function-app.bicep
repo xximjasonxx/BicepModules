@@ -83,8 +83,10 @@ resource func 'Microsoft.Web/sites@2022-03-01' = {
 
   properties: {
     serverFarmId: appServicePlanId
+    keyVaultReferenceIdentity: managedIdentityId == '' ? null : managedIdentityId
     siteConfig: {
       appSettings: finalAppettings
+      keyVaultReferenceIdentity: managedIdentityId == '' ? null : managedIdentityId
     }
     httpsOnly: true
   }
