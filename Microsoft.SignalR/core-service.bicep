@@ -17,3 +17,6 @@ resource signalr 'Microsoft.SignalRService/signalR@2022-08-01-preview' = {
     ]
   }
 }
+
+// outputs
+output signalr_name string = signalr.name
