@@ -11,12 +11,12 @@ param kind string = 'GlobalDocumentDB'
 
 param allowPublicAccess bool = true
 param isServerless bool = false
-
-param roleAssignments array = []
 param configuration object = {}
 
 // local variables
 var sqlDatabaseConfiguration = contains(configuration, 'sql') == false ? {} : configuration.sql
+
+var sqlRoleAssignments = contains(sqlDatabaseConfiguration, 'roleAssignments') == false ? [] : sqlDatabaseConfiguration.roleAssignments
 
 var capabilitities = isServerless == false ? [] : [
   {
@@ -43,24 +43,25 @@ resource account 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
   }
 }
 
-// add role assignments (if any)
-module accountRoleAssignments '.account-role.bicep' = [for (assignment, index) in roleAssignments : {
-  name: '${account.name}-roleAssignment${index}-deployment'
-  params: {
-    cosmosAccountName: account.name
-    cosmosAccountResourceGroupName: resourceGroup().name
-    roleName: assignment.roleName
-    principalId: assignment.principalId
-    scope: account.id
-  }
-}]
-
 // create the sql databases
-module sqlDatabases '.sqldatabase.bicep' = [for config in items(sqlDatabaseConfiguration) : {
+module sqlDatabases 'sql/database.bicep' = [for config in items(sqlDatabaseConfiguration) : {
   name: '${account.name}-${config.key}-deployment'
   params: {
     accountName: account.name
     databaseName: config.key
-    containers: contains(config.value, 'containers') == false ? [] : config.value.containers
+    collections: contains(config.value, 'containers') == false ? [] : config.value.containers
+    roleAssignments: contains(config.value, 'roleAssignments') == false ? [] : config.value.roleAssignments
+  }
+}]
+
+// create the sql role assignments
+module sqlRoleAssignmentResources 'sql/.sql-roleassignment.bicep' = [for (assignment, index) in sqlRoleAssignments : {
+  name: '${account.name}-sql-roleAssignment${index}-deployment'
+  params: {
+    cosmosAccountId: account.id
+    roleName: assignment.roleName
+    roleAssignmentId: guid('sql-role-definition-', assignment.principalId, account.name,assignment.roleName)
+    principalId: assignment.principalId
+    scope: account.id
   }
 }]
