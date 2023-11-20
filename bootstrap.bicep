@@ -1,12 +1,41 @@
+targetScope = 'resourceGroup'
 
-module storageAccount 'br:crbicepmodulesjx01.azurecr.io/microsoft.storage/account:1.1.0' = {
-  name: 'sandbox-storageaccount-deploy'
+@secure()
+param adminPassword string
+
+param location string = resourceGroup().location
+
+module virtualNetwork 'networking/virtualNetwork.bicep' = {
+  name: 'virtual-network-deployment'
   params: {
-    baseName: 'testaccountjx01'
-    queues: [
+    resourceName: 'vnet-network-test'
+    location: location
+    addressSpacePrefixes: [
+      '10.0.0.0/16'
+    ]
+
+    subnets: [
       {
-        name: 'testqueue'
+        name: 'webservers'
+        addressPrefix: '10.0.0.0/24'
       }
     ]
   }
 }
+
+module networkInterface 'networking/networkInterface.bicep' = {
+  name: 'network-interface-deployment'
+  params: {
+    resourceName: 'nic-vm-webserver'
+    location: location
+    attachedSubnetId: virtualNetwork.outputs.subnets.webservers.id
+  }
+}
+
+//module virtualMachine 'compute/virtualMachine.bicep' = {
+//  name: 'virtual-machine-deployment'
+//  params: {
+//    location: location
+//    adminPasswordSecure: adminPassword
+//  }
+//}

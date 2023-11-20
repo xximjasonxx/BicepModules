@@ -8,6 +8,13 @@ param addressSpacePrefixes array
 param ddosProtectionPlanId string = ''
 param subnets array = []
 
+var subnet_resources = [for subnet in subnets: {
+  name: subnet.name
+  properties: {
+    addressPrefix: subnet.addressPrefix
+  }
+}]
+
 resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
   name: resourceName
   location: location
@@ -20,16 +27,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
       id: ddosProtectionPlanId
     }
 
-    subnets: [
-      {
-        name: 'privateEndpoints'
-        properties: {
-          addressPrefix: '10.0.0.0/24'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-      }
-    ]
+    subnets: subnet_resources
   }
 }
 
 output resourceName string = vnet.name
+output subnets object = reduce(vnet.properties.subnets, {}, (prev, cur) => union(prev, { '${cur.name}': {
+  id: cur.id
+}}))
