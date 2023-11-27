@@ -7,25 +7,49 @@ param adminUsername string = 'azureuser'
 @secure()
 param adminPasswordSecure string
 
+param networkInterfaceId string
+
+@allowed([
+  'Linux'
+  'Windows'
+])
+param osType string = 'Linux'
+
+var imageBlock = osType == 'Linux' ? {
+  publisher: 'Canonical'
+  offer: '0001-com-ubuntu-server-focal'
+  sku: '20_04-lts-gen2'
+  version: 'latest'
+} : {
+  publisher: 'MicrosoftWindowsServer'
+  offer: 'WindowsServer'
+  sku: '2019-Datacenter'
+  version: 'latest'
+}
+
+@allowed([
+  'Small'
+  'Medium'
+  'Large'
+])
+param vmSize string = 'Small'
+
+var hardwareProfileBlock = {
+  vmSize: vmSize == 'Small' ? 'Standard_D2as_v4' : vmSize == 'Medium' ? 'Standard_D4as_v4' : 'Standard_D8as_v4'
+}
+
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   name: 'vm-${appName}-webserver'
   location: location
 
   properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_D2as_v4'
-    }
+    hardwareProfile: hardwareProfileBlock
 
     storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: '0001-com-ubuntu-server-focal'
-        sku: '20_04-lts-gen2'
-        version: 'latest'
-      }
+      imageReference: imageBlock
 
       osDisk: {
-        osType: 'Linux'
+        osType: osType
         name: 'disk-${appName}-webserver-osdisk'
         createOption: 'FromImage'
         caching: 'ReadWrite'
@@ -63,29 +87,14 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
     }
 
     networkProfile: {
-      networkInterfaceConfigurations: [
+      networkInterfaces: [
         {
-          name: 'nic-${appName}-webserver'
+          id: networkInterfaceId
           properties: {
             deleteOption: 'Delete'
-            ipConfigurations: [
-              {
-                name: 'ipconfig-${appName}-webserver'
-                properties: {
-                  privateIPAddressVersion: 'IPv4'
-                }
-              }  
-            ]
           }
         }
       ]
-    }
-
-    diagnosticsProfile: {
-      bootDiagnostics: {
-        enabled: true
-        storageUri: 'https://diag${appName}sa.blob.core.windows.net/'
-      }
     }
   }
 }
