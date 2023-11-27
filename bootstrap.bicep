@@ -32,10 +32,11 @@ module networkInterface 'networking/networkInterface.bicep' = {
   }
 }
 
-//module virtualMachine 'compute/virtualMachine.bicep' = {
-//  name: 'virtual-machine-deployment'
-//  params: {
-//    location: location
-//    adminPasswordSecure: adminPassword
-//  }
-//}
+module virtualMachine 'compute/virtualMachine.bicep' = {
+  name: 'virtual-machine-deployment'
+  params: {
+    location: location
+    adminPasswordSecure: adminPassword
+    networkInterfaceId: networkInterface.outputs.resourceId
+  }
+}
