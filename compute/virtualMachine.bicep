@@ -1,13 +1,12 @@
-targetScope = 'resourceGroup'
-var appName = 'testapp'
 
+param resourceName string
 param location string
-param adminUsername string = 'azureuser'
+param networkInterfaceId string
+
+param adminUsername string
 
 @secure()
 param adminPasswordSecure string
-
-param networkInterfaceId string
 
 @allowed([
   'Linux'
@@ -15,31 +14,28 @@ param networkInterfaceId string
 ])
 param osType string = 'Linux'
 
-var imageBlock = osType == 'Linux' ? {
-  publisher: 'Canonical'
-  offer: '0001-com-ubuntu-server-focal'
-  sku: '20_04-lts-gen2'
-  version: 'latest'
-} : {
-  publisher: 'MicrosoftWindowsServer'
-  offer: 'WindowsServer'
-  sku: '2019-Datacenter'
-  version: 'latest'
+// image information
+param imagePublisher string
+param imageOffer string
+param imageSku string
+param imageVersion string
+
+// create the block to be used
+var imageBlock = {
+  publisher: imagePublisher
+  offer: imageOffer
+  sku: imageSku
+  version: imageVersion
 }
 
-@allowed([
-  'Small'
-  'Medium'
-  'Large'
-])
-param vmSize string = 'Small'
+param vmSize string
 
 var hardwareProfileBlock = {
-  vmSize: vmSize == 'Small' ? 'Standard_D2as_v4' : vmSize == 'Medium' ? 'Standard_D4as_v4' : 'Standard_D8as_v4'
+  vmSize: vmSize
 }
 
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
-  name: 'vm-${appName}-webserver'
+  name: resourceName
   location: location
 
   properties: {
@@ -50,17 +46,15 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
 
       osDisk: {
         osType: osType
-        name: 'disk-${appName}-webserver-osdisk'
+        name: 'disk-${resourceName}-osdisk'
         createOption: 'FromImage'
         caching: 'ReadWrite'
         deleteOption: 'Delete'
       }
-      
-      diskControllerType: 'SCSI'
     }
 
     osProfile: {
-      computerName: 'vm-${appName}-webserver'
+      computerName: resourceName
       adminUsername: adminUsername
       adminPassword: adminPasswordSecure
       linuxConfiguration: {
@@ -76,14 +70,6 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
 
         enableVMAgentPlatformUpdates: false
       }
-    }
-
-    securityProfile: {
-      uefiSettings: {
-        secureBootEnabled: true
-        vTpmEnabled: true
-      }
-      securityType: 'TrustedLaunch'
     }
 
     networkProfile: {
