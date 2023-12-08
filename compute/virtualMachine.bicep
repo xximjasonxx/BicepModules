@@ -12,7 +12,7 @@ param adminPasswordSecure string
   'Linux'
   'Windows'
 ])
-param osType string = 'Linux'
+param osType string
 
 // image information
 param imagePublisher string
@@ -34,7 +34,7 @@ var hardwareProfileBlock = {
   vmSize: vmSize
 }
 
-var linuxConfiguration = osType == 'Linux' ? {
+var linuxConfiguration = {
   disablePasswordAuthentication: false
   provisionVMAgent: true
   patchSettings: {
@@ -46,9 +46,9 @@ var linuxConfiguration = osType == 'Linux' ? {
   }
 
   enableVMAgentPlatformUpdates: false
-} : null
+}
 
-var windowsConfiguration = osType == 'Windows' ? {
+var windowsConfiguration = {
   provisionVMAgent: true
   enableAutomaticUpdates: true
   patchSettings: {
@@ -62,7 +62,7 @@ var windowsConfiguration = osType == 'Windows' ? {
   }
 
   enableVMAgentPlatformUpdates: false
-} : null
+}
 
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   name: resourceName
@@ -87,8 +87,8 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       computerName: resourceName
       adminUsername: adminUsername
       adminPassword: adminPasswordSecure
-      linuxConfiguration: linuxConfiguration
-      windowsConfiguration: windowsConfiguration
+      windowsConfiguration: osType == 'Windows' ? windowsConfiguration : null
+      linuxConfiguration: osType == 'Linux' ? linuxConfiguration : null
     }
 
     networkProfile: {
