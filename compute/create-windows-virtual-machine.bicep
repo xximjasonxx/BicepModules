@@ -31,18 +31,18 @@ var imageBlocks = {
 
 var vmSizeActual = vmSize == 'Small' ? 'Standard_D2as_v4' : vmSize == 'Medium' ? 'Standard_D4as_v4' : 'Standard_D8as_v4'
 
-module virtualMachine 'br:cradotesting01.azurecr.io/bicep/modules/compute/virtual-machine:1.0.0' = {
+module virtualMachine 'br:cradotesting01.azurecr.io/bicep/modules/compute/virtual-machine:1.0.1' = {
   name: 'create-linux-vm-deployment'
   params: {
     resourceName: resourceName
     location: location
     adminUsername: adminUsername
-    adminPasswordSecure: adminPasswordSecure
+    adminPasswordSecure: adminPassword
     osType: 'Windows'
-    imagePublisher: imageBlocks[redhatVersion].publisher
-    imageOffer: imageBlocks[redhatVersion].offer
-    imageSku: imageBlocks[redhatVersion].sku
-    imageVersion: imageBlocks[redhatVersion].version
+    imagePublisher: imageBlocks[windowsVersion].publisher
+    imageOffer: imageBlocks[windowsVersion].offer
+    imageSku: imageBlocks[windowsVersion].sku
+    imageVersion: imageBlocks[windowsVersion].version
     networkInterfaceId: networkInterfaceId
     vmSize: vmSizeActual
   }
