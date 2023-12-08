@@ -34,6 +34,36 @@ var hardwareProfileBlock = {
   vmSize: vmSize
 }
 
+var linuxConfiguration = osType == 'Linux' ? {
+  disablePasswordAuthentication: false
+  provisionVMAgent: true
+  patchSettings: {
+    patchMode: 'AutomaticByPlatform'
+    automaticByPlatformSettings: {
+      bypassPlatformSafetyChecksOnUserSchedule: true
+    }
+    assessmentMode: 'AutomaticByPlatform'
+  }
+
+  enableVMAgentPlatformUpdates: false
+} : null
+
+var windowsConfiguration = osType == 'Windows' ? {
+  provisionVMAgent: true
+  enableAutomaticUpdates: true
+  patchSettings: {
+      patchMode: 'AutomaticByPlatform'
+      automaticByPlatformSettings: {
+          rebootSetting: 'IfRequired'
+          bypassPlatformSafetyChecksOnUserSchedule: false
+      }
+      assessmentMode: 'ImageDefault'
+      enableHotpatching: true
+  }
+
+  enableVMAgentPlatformUpdates: false
+} : null
+
 resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   name: resourceName
   location: location
@@ -57,19 +87,8 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       computerName: resourceName
       adminUsername: adminUsername
       adminPassword: adminPasswordSecure
-      linuxConfiguration: {
-        disablePasswordAuthentication: false
-        provisionVMAgent: true
-        patchSettings: {
-          patchMode: 'AutomaticByPlatform'
-          automaticByPlatformSettings: {
-            bypassPlatformSafetyChecksOnUserSchedule: true
-          }
-          assessmentMode: 'AutomaticByPlatform'
-        }
-
-        enableVMAgentPlatformUpdates: false
-      }
+      linuxConfiguration: linuxConfiguration
+      windowsConfiguration: windowsConfiguration
     }
 
     networkProfile: {
