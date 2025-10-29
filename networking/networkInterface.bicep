@@ -14,7 +14,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2023-05-01' = {
         name: 'private-configuration'
         properties: {
           privateIPAddressVersion: 'IPv4'
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
           subnet: {
             id: attachedSubnetId
           }
